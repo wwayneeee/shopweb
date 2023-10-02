@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購物車首頁(練習)</title>
+    <link rel="stylesheet" href="/CSS/index.css">
+</head>
+<body style="margin: 0px;">
+    <div class="hend">
+        <div class="title">歡迎光臨購物網站</div>
+        <div class="cart_login_member">
+            <div class="clm">
+                <button><img class="clm_btn" src="/picture/購物車.png"></button>
+                <a href="/login"><button><img class="clm_btn" src="/picture/會員頭像.png"></button></a>
+            </div>
+        </div>  
+    </div>
+    <div class="content">
+        <h3>衣服</h3>
+        <div class="product product:hover">
+            <div><img class="product_img" src="/clothes/clothes1.jfif"/></div>
+            <div>商品名稱：藍色短袖</div>
+            <div>商品價格：{{ productvalue[0] }}</div>
+        </div>
+        <div class="product product:hover" >
+            <div><img class="product_img" src="/clothes/clothes2.jpg"/></div>
+            <div>商品名稱：白色短袖</div>
+            <div>商品價格：{{ productvalue[1] }}</div>
+        </div> 
+        <h3>褲子</h3>
+    </div>
+    
+</body>
+</html>
