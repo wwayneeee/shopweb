@@ -10,6 +10,9 @@ body{
 .leftposition{
     margin-left: 15%;
 }
+.content{
+    display: inline-block;
+}
 button{
     height: 50px;
     width: 100px;

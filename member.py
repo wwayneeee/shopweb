@@ -4,16 +4,14 @@ client = pymongo.MongoClient("mongodb+srv://wayne:wayne123@mycluster.p6yq4gq.mon
 db = client.member_system
 print("資料庫連線成功")
 
-# from app import get_db
-# db = get_db()
-
 collection=db.users
 
-class membersystem():
+class membersystem:
     def __init__(self,username,email,password):
         self.username=username
         self.email=email
         self.password=password
+        
 
     def signup(self):
         # 檢查信箱是否被註冊過

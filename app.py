@@ -9,14 +9,6 @@ app=Flask(
 # 設定 Session 密鑰
 app.secret_key = "any string but secret"
 
-# 初始化連線資料庫
-import pymongo
-client = pymongo.MongoClient("mongodb+srv://wayne:wayne123@mycluster.p6yq4gq.mongodb.net/?retryWrites=true&w=majority")
-db = client.member_system
-print("資料庫連線成功")
-def get_db():
-    return db
-
 from member import *
 
 # 首頁
