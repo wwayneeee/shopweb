@@ -1,3 +1,125 @@
-test
-123
-456
+import pdfplumber
+import openpyxl
+from openpyxl.styles import Font, PatternFill
+
+# read pdf
+
+filepath = "C:/Users/惟雄/OneDrive/桌面/SMU成果報告/01-1FY112_疫後_SMU_Phase_I_委辦計畫期末執行成果報告(晉暉)委員意見版1121018.pdf"
+pdf = pdfplumber.open(filepath)
+
+def targetpage(keyword):# 根據關鍵字抓頁碼
+    for page in pdf.pages:
+        text = page.extract_text()
+        if text and keyword in text:
+            target_page = page.page_number
+    return target_page-1
+
+def erp_mes(): # 從廠商明細表->ERP、MES是否有整合，設備數量(SMB)，經費
+    page = pdf.pages[targetpage("受輔導業者明細表")]
+    tables = page.extract_tables()
+    for table in tables:
+        project_number = table[0][1]
+        print("案號：",table[0][1])
+        for i in range(2,6):
+            print(table[i])
+    return project_number# 回傳案號
+
+def benefits ():# 量化效益表抓已選填效益(SMB、SMU)
+    final_benefits= []
+    for i in range(2):
+        page = pdf.pages[targetpage("本計畫效益")+i]
+        tables = page.extract_tables()
+        #print(f"效益第{i+1}頁")
+        for table in tables:
+            for row in table:
+                #print(row)
+                if i == 0 and row[2] and row[4] and row[4] != "-": # 判斷"輔導後表格"是否有數值
+                    final_benefits.append([row[2],row[3],row[4],row[-3]]) # 針對個案情況調整效益index
+                    #print(f"{row[2]}-> 輔導前：{row[5]}, 輔導後：{row[6]}, 合計：{row[-2]}")
+                # elif i == 1 and row[4] and row[4] != "-": # 判斷"輔導後表格"是否有數值
+                #     final_benefits.append([row[2],row[3],row[4],row[-1]]) # 針對個案情況調整效益index
+                #     print(f"{row[2]}-> 輔導前:{row[3]}, 輔導後:{row[4]}, 合計:{row[-1]}")
+
+    #print(final_benefits,len(final_benefits))
+    return final_benefits
+
+project_number = erp_mes()# ERP、MES整合，設備聯網數、經費
+print("==========")
+
+project_benefit = benefits()# 效益
+print("==========")
+
+pdf.close()
+
+# update excel
+
+wb = openpyxl.load_workbook('C:/Users/惟雄/OneDrive/桌面/SMU成果報告/(107-111)效益統整1120608V2★.xlsx')
+
+smb = wb['112B+疫後B']
+smu = wb['112U+疫後U']
+
+# 判斷案號位置
+for i in range(3,29):
+    if project_number == smb.cell(i,1).value:
+        smb.cell(i,1).value = f"{smb.cell(i,1).value}\n(final)"
+        projectnumber_position = i
+        break
+print(project_number,projectnumber_position)
+
+def match_benefit_5160():# 判斷個案效益
+    for benefit in range(len(project_benefit)):
+        if project_benefit[benefit][0] and benefit_name in project_benefit[benefit][0]:
+            if smb.cell(projectnumber_position,count).value:
+                smb.cell(projectnumber_position,count).value = f"{smb.cell(projectnumber_position,count).value}\n{project_benefit[benefit][2]}"
+
+            else:
+                smb.cell(projectnumber_position,count).value = project_benefit[benefit][2]
+
+            smb.cell(projectnumber_position,count).font = Font(color = 'ff0000',bold=True)
+            del project_benefit[benefit]
+            break
+
+def match_benefit_6185():# 判斷個案效益
+    for benefit in range(len(project_benefit)):
+        if project_benefit[benefit][0] and benefit_name in project_benefit[benefit][0]:
+            if smb.cell(projectnumber_position,count).value:
+                smb.cell(projectnumber_position,count).value = f"{smb.cell(projectnumber_position,count).value}\n{project_benefit[benefit][3]}"
+                smb.cell(projectnumber_position,count+1).value = f"{smb.cell(projectnumber_position,count+1).value}\n({project_benefit[benefit][1]}→{project_benefit[benefit][2]})"
+
+            else:
+                smb.cell(projectnumber_position,count).value = project_benefit[benefit][3]
+                smb.cell(projectnumber_position,count+1).value = f"({project_benefit[benefit][1]}→{project_benefit[benefit][2]})"
+
+            smb.cell(projectnumber_position,count).font = Font(color = 'ff0000',bold=True)
+            smb.cell(projectnumber_position,count+1).font = Font(color = 'ff0000',bold=True)
+            del project_benefit[benefit]
+            break
+
+# 擷取效益表內的效益名稱
+count = 51 # 效益起始位置
+while count < 85: # 效益結束位置
+    i = 1 # 儲存格間距
+    benefit_name = ""
+    for j in smb.cell(2,count).value:
+        if j == "(":
+            break
+        else:
+            benefit_name += j
+    if count < 61:
+        match_benefit_5160()
+    elif count >= 61:
+        i = 2
+        match_benefit_6185()
+    count += i
+
+# 處理剩餘的效益
+a = 87
+for i in range(len(project_benefit)):
+    if smb.cell(projectnumber_position,a+i):
+        smb.cell(projectnumber_position,a+i).value = f"{smb.cell(projectnumber_position,a+i).value}\n{project_benefit[i][0]} {project_benefit[i][3]}({project_benefit[i][1]}→{project_benefit[i][2]})"
+    else:
+        smb.cell(projectnumber_position,a+i).value = f"{project_benefit[i][0]} {project_benefit[i][3]}({project_benefit[i][1]}→{project_benefit[i][2]})"
+    smb.cell(projectnumber_position,a+i).font = Font(color = 'ff0000',bold=True)
+
+
+wb.save('C:/Users/惟雄/OneDrive/桌面/SMU成果報告/(107-111)效益統整1120608V2★.xlsx')
